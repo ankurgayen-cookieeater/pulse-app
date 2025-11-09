@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pulse – Safe Conversations</title>
+<meta name="description" content="Pulse connects two real people for anonymous, kind, empathy-first conversations." />
+<style>
+  :root{
+    --mint:#B6E2A1; --mint-2:#CDECC7; --mint-3:#EAF7E4; --ink:#333; --ink-2:#444; --radius:16px;
+    --w-mobile:430px; --shadow:0 8px 24px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,Roboto,Poppins,system-ui,-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:var(--ink);background:linear-gradient(180deg,var(--mint) 0%, var(--mint-3) 35%, #fff 100%)}
+  a{color:inherit}
+  .app{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px}
+  .phone{width:100%;max-width:var(--w-mobile); background:#fff; border-radius:28px; box-shadow:var(--shadow); overflow:hidden; border:1px solid rgba(0,0,0,.06)}
+  .safearea{padding:18px 18px 24px}
+  header{display:flex;justify-content:center;align-items:center;padding:10px 0 2px;color:#2f5d20;font-weight:600}
+  .tag{display:inline-flex;align-items:center;gap:.5rem; padding:.35rem .6rem; background:var(--mint-3); border-radius:999px; font-size:.8rem; color:#2f5d20; border:1px solid var(--mint-2)}
+  h1{font-size:1.5rem; margin:.25rem 0 .25rem; text-align:center}
+  h2{font-size:1.25rem; margin:.25rem 0 .75rem; text-align:center}
+  p.lead{color:var(--ink-2); text-align:center; margin:0 0 14px}
+  .privacy{font-size:.9rem; color:var(--ink-2); background:var(--mint-3); padding:12px; border-radius:12px; border:1px solid var(--mint-2); text-align:center; margin:8px 0 14px}
+  .buttons{display:flex; gap:10px; flex-direction:column; margin-top:10px}
+  .btn{appearance:none;border:0; border-radius:var(--radius); padding:14px 16px; font-weight:600; cursor:pointer; transition:.15s transform ease, .15s box-shadow ease; box-shadow:0 4px 10px rgba(0,0,0,.06)}
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--mint); color:#10370e}
+  .btn-secondary{background:#fff; color:#10370e; border:1px solid var(--mint-2)}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .card{
+  background:var(--mint-3);
+  border:1px solid var(--mint-2);
+  border-radius:var(--radius);
+  padding:14px;
+  text-align:center;
+  cursor:pointer;
+  user-select:none;
+  transition:transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover{
+  transform:scale(1.03);
+  box-shadow:0 6px 12px rgba(0,0,0,0.06);
+}
+.card.selected{
+  transform:scale(1.08);
+  box-shadow:0 0 0 3px var(--mint);
+  background:#fff;
+}
+
+  .center{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; text-align:center}
+  .muted{color:#5c6b57; font-size:.95rem}
+  .spacer{height:8px}
+  .footer-note{font-size:.8rem; color:#5c6b57; text-align:center; margin-top:10px}
+  .hidden{display:none !important}
+  /* Chat bubbles */
+  .chat{display:flex; flex-direction:column; gap:8px; margin:8px 0 14px}
+  .bubble{max-width:80%; padding:10px 12px; border-radius:14px; box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .bubble.me{align-self:flex-end; background:#e8ffe2; border:1px solid #cfecc8}
+  .bubble.them{align-self:flex-start; background:#f6fff3; border:1px solid #dff1d8}
+  .inputrow{display:flex; gap:8px; align-items:center; border:1px solid var(--mint-2); border-radius:12px; padding:8px; background:#fff}
+  .inputrow input{flex:1; border:0; outline:none; padding:8px 6px; font-size:1rem}
+  .pill{display:inline-flex;padding:4px 10px;background:var(--mint-3);border:1px solid var(--mint-2);border-radius:999px;font-size:.85rem;color:#2f5d20}
+  /* Stars */
+  .stars{display:flex; gap:6px; justify-content:center}
+  .star{font-size:28px; cursor:pointer; filter:grayscale(1) opacity(.7)}
+  .star.on{filter:none}
+  /* Loader */
+  .dots::after{content:""; display:inline-block; width:1.2em; text-align:left; animation:dots 1.2s steps(4,end) infinite}
+  @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}100%{content:""}}
+  /* Bottom sticky */
+  .sticky{position:sticky; bottom:0; background:linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 35%); padding-top:8px}
+</style>
+</head>
+<body>
+<div class="app"><div class="phone"><div class="safearea">
+
+  <!-- Header / tag (role & partner feeling shown on some routes) -->
+  <header id="hdr" class="hidden">
+    <span id="hdrTag" class="tag"></span>
+  </header>
+
+  <!-- ROUTES -->
+  <!-- HOME -->
+  <section id="route-home">
+    <h1>Welcome to Pulse</h1>
+    <p class="lead">A safe space where real people talk and listen.</p>
+    <div class="privacy">
+      🔒 Your privacy is protected. No profiles, names, or photos are stored or shown. AI only monitors for safety and kindness.
+    </div>
+    <div class="buttons">
+      <button class="btn btn-primary" onclick="goTalk()">I want to Talk</button>
+      <button class="btn btn-secondary" onclick="goListen()">I want to Listen</button>
+    </div>
+    <p class="footer-note">AI ensures empathy and safety in every chat.</p>
+  </section>
+
+  <!-- EMOTION -->
+  <section id="route-emotion" class="hidden">
+    <h2>How are you feeling today?</h2>
+    <div id="emotionGrid" class="grid"></div>
+    <div class="spacer"></div>
+    <button id="btnEmotionNext" class="btn btn-primary" disabled onclick="toMatching()">Next</button>
+    <p class="footer-note">Choose one emotion to help us find a kind listener.</p>
+  </section>
+
+  <!-- LISTENER READY -->
+  <section id="route-listener-ready" class="hidden">
+    <h2>Thanks for being here to listen.</h2>
+    <p class="lead">You’ll soon be paired with someone who needs support. AI helps keep every chat kind and safe.</p>
+    <div class="buttons">
+      <button class="btn btn-primary" onclick="toMatching()">Start Listening</button>
+    </div>
+  </section>
+
+  <!-- MATCHING -->
+  <section id="route-matching" class="hidden center" style="min-height:60vh">
+    <h2>Finding someone who’s ready to talk/listen<span class="dots"></span></h2>
+    <p class="muted">AI is creating a safe, empathetic match.</p>
+  </section>
+
+  <!-- LISTENER NOTIFICATION -->
+  <section id="route-listener-note" class="hidden">
+    <h2>You’re about to chat with someone who feels:</h2>
+    <div id="noteCard" class="privacy" style="font-size:1.05rem"></div>
+    <div class="buttons">
+      <button class="btn btn-primary" onclick="nav('/chat')">I’m Ready</button>
+    </div>
+  </section>
+
+  <!-- CHAT -->
+  <section id="route-chat" class="hidden">
+    <div class="center">
+      <div id="partnerTag" class="pill hidden"></div>
+    </div>
+    <div class="chat" id="chatLog">
+      <div class="bubble them">Hey, I’ve had a rough day.</div>
+      <div class="bubble me">I’m here for you. Want to talk about it?</div>
+    </div>
+    <div class="inputrow" aria-label="message input (visual only)">
+      <input placeholder="Type your message… (demo)" disabled />
+      <button class="btn btn-secondary" disabled>Send</button>
+    </div>
+    <div class="sticky">
+      <div class="buttons">
+        <button class="btn btn-primary" onclick="nav('/feedback')">End Chat</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEEDBACK -->
+  <section id="route-feedback" class="hidden">
+    <h2 id="fbTitle">How did this conversation feel?</h2>
+    <div class="stars" role="radiogroup" aria-label="Rate your experience">
+      <span class="star" onclick="rate(1)">★</span>
+      <span class="star" onclick="rate(2)">★</span>
+      <span class="star" onclick="rate(3)">★</span>
+      <span class="star" onclick="rate(4)">★</span>
+      <span class="star" onclick="rate(5)">★</span>
+    </div>
+    <div class="spacer"></div>
+    <textarea id="fbText" rows="3" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--mint-2)" placeholder="Share a brief thought (optional)"></textarea>
+    <div class="spacer"></div>
+    <div class="buttons">
+      <button id="fbSubmit" class="btn btn-primary" onclick="nav('/summary')" disabled>Submit</button>
+    </div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section id="route-summary" class="hidden center" style="min-height:55vh">
+    <h2 id="sumTitle">Thank you for sharing. 💚</h2>
+    <p id="sumText" class="lead">We’re glad Pulse could be there for you.</p>
+    <div class="buttons" style="margin-top:8px">
+      <button class="btn btn-secondary" onclick="nav('/')">Back to Home</button>
+    </div>
+  </section>
+
+</div></div></div>
+
+<script>
+/* ---------- Minimal router + state ---------- */
+const state = {
+  role:null,           // 'talker' | 'listener'
+  emotion:null,        // selected by talker
+  rating:0,            // 1..5
+  listenerSeeEmotion:true
+};
+
+const EMOTIONS = [
+  {key:'Happy', emoji:'😊', tint:'#fff7c2'},
+  {key:'Sad', emoji:'😢', tint:'#d6eef9'},
+  {key:'Angry', emoji:'😠', tint:'#ffd6cf'},
+  {key:'Lonely', emoji:'😔', tint:'#dfeadf'},   // changed here
+  {key:'Anxious', emoji:'😟', tint:'#d9f3ef'},
+  {key:'Okay', emoji:'🙂', tint:'#eee'}
+];
+
+
+function $(sel){return document.querySelector(sel)}
+function show(id){
+  // toggle sections
+  document.querySelectorAll('section[id^="route-"]').forEach(s=>s.classList.add('hidden'));
+  $(id).classList.remove('hidden');
+  // header tag visibility
+  const hdr = $('#hdr'), tag = $('#hdrTag');
+  hdr.classList.add('hidden');
+  if(location.hash === '#/chat' && state.role==='listener' && state.emotion){
+    tag.textContent = `Partner feeling: ${state.emotion}`;
+    hdr.classList.remove('hidden');
+  }
+}
+
+function nav(path){ location.hash = path || '#/'; }
+
+window.addEventListener('hashchange', handleRoute);
+window.addEventListener('load', () => {
+  buildEmotionGrid();
+  if(!location.hash) nav('/'); else handleRoute();
+});
+
+function handleRoute(){
+  const r = location.hash.replace('#','') || '/';
+  switch(r){
+    case '/':                 return show('#route-home');
+    case '/emotion':          return (state.role='talker', show('#route-emotion'), updateEmotionNext());
+    case '/listener-ready':   return (state.role='listener', show('#route-listener-ready'));
+    case '/matching':         return onMatching();
+    case '/listener-note':    return onListenerNote();
+    case '/chat':             return onChat();
+    case '/feedback':         return onFeedback();
+    case '/summary':          return onSummary();
+    default:                  return nav('/');
+  }
+}
+
+/* ---------- Home actions ---------- */
+function goTalk(){ state.role='talker'; nav('/emotion'); }
+function goListen(){ state.role='listener'; nav('/listener-ready'); }
+
+/* ---------- Emotion selection ---------- */
+function buildEmotionGrid(){
+  const g = $('#emotionGrid'); g.innerHTML='';
+  EMOTIONS.forEach((e,idx)=>{
+    const div = document.createElement('div');
+    div.className='card'; div.style.background=e.tint;
+    div.innerHTML = `<div style="font-size:26px">${e.emoji}</div><div style="margin-top:4px">${e.key}</div>`;
+    div.onclick = ()=>{
+      state.emotion=e.key;
+      [...g.children].forEach(c=>c.classList.remove('selected'));
+      div.classList.add('selected');
+      updateEmotionNext();
+    };
+    g.appendChild(div);
+  });
+}
+function updateEmotionNext(){
+  const btn = $('#btnEmotionNext');
+  btn.disabled = !state.emotion;
+}
+
+/* ---------- Matching ---------- */
+function toMatching(){ nav('/matching'); }
+function onMatching(){
+  show('#route-matching');
+  // Simulate 2s matchmaking then proceed
+  setTimeout(()=>{
+    if(state.role==='listener'){
+      // In a real app, emotion would come from the matched talker. Simulate with last selected or 'Anxious'.
+      if(!state.emotion) state.emotion = state.emotion || 'Anxious';
+      nav('/listener-note');
+    }else{
+      nav('/chat');
+    }
+  }, 1500);
+}
+
+/* ---------- Listener notification ---------- */
+function onListenerNote(){
+  show('#route-listener-note');
+  const emo = state.emotion || 'Anxious';
+  $('#noteCard').innerHTML = `Your partner feels <b>${emo}</b>. Keep your tone calm and understanding.`;
+}
+
+/* ---------- Chat ---------- */
+function onChat(){
+  show('#route-chat');
+  const tag = $('#partnerTag');
+  if(state.role==='listener' && state.emotion){
+    tag.textContent = `Partner feeling: ${state.emotion}`;
+    tag.classList.remove('hidden');
+  }else{
+    tag.classList.add('hidden');
+  }
+}
+
+/* ---------- Feedback ---------- */
+function onFeedback(){
+  show('#route-feedback');
+  // Role-aware title + optional text box
+  const title = $('#fbTitle');
+  const box = $('#fbText');
+  state.rating=0; renderStars();
+  if(state.role==='talker'){
+    title.textContent = 'Did you feel heard and understood?';
+    box.parentElement.style.display='none';
+  }else{
+    title.textContent = 'How well did you understand your partner’s feelings?';
+    box.parentElement.style.display='block';
+    box.value='';
+  }
+  $('#fbSubmit').disabled = true;
+}
+function rate(n){ state.rating=n; renderStars(); $('#fbSubmit').disabled = (n<1); }
+function renderStars(){
+  document.querySelectorAll('.star').forEach((s,i)=> s.classList.toggle('on', i<state.rating));
+}
+
+/* ---------- Summary ---------- */
+function onSummary(){
+  show('#route-summary');
+  const sumTitle = $('#sumTitle'), sumText = $('#sumText');
+  if(state.role==='listener'){
+    sumTitle.textContent = 'You helped someone today. 💚';
+    sumText.textContent  = 'Thank you for listening with empathy.';
+  }else{
+    sumTitle.textContent = 'Thank you for sharing. 💚';
+    sumText.textContent  = 'We’re glad Pulse could be there for you.';
+  }
+  // Reset lightweight session (keep theme)
+  state.rating = 0;
+}
+
+/* Accessibility: keyboard support for stars */
+document.addEventListener('keydown', (e)=>{
+  if(location.hash==='#/feedback'){
+    if(e.key>='1' && e.key<='5'){ rate(Number(e.key)); }
+  }
+});
+</script>
+</body>
+</html>
